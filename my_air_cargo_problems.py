@@ -200,34 +200,12 @@ class AirCargoProblem(Problem):
         executed.
         """
         # (see Russell-Norvig Ed-3 10.2.3  or Russell-Norvig Ed-2 11.2)
-        if self.goal_test(node.state):
-            return 0
-
-        effective_actions = []
-        for action in self.actions_list:
-            effect_add = [clause for clause in action.effect_add if clause in self.goal]
-            effect_rem = [clause for clause in action.effect_rem if clause in self.goal]
-            if len(effect_add) + len(effect_rem) > 0:
-                effective_actions.append(Action(Expr(action.name, action.args), [[], []], [effect_add, effect_rem]))
-
-        original_actions = self.actions_list
-        self.actions_list = effective_actions
-
-        frontier = FIFOQueue()
-        frontier.append(node)
-        explored = set()
-        while frontier:
-            node = frontier.pop()
-            explored.add(node.state)
-            for child in node.expand(self):
-                if child.state not in explored and child not in frontier:
-                    if self.goal_test(child.state):
-                        self.actions_list = original_actions
-                        return len(child.solution())
-                    frontier.append(child)
-
-        self.actions_list = original_actions
-        return 2000000000
+        neg_fluents = set(decode_state(node.state, self.state_map).neg)
+        count = 0
+        for clause in self.goal:
+            if clause in neg_fluents:
+                count += 1
+        return count
 
 
 def air_cargo_p1() -> AirCargoProblem:
